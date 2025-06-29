@@ -1,8 +1,13 @@
 require('dotenv').config();
+const cors = require('cors')
 const express = require('express')
 const app = express()
 const port = process.env.PORT || 5000
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
+// middleware
+app.use(cors())
+app.use(express.json())
 
 
 const uri = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Pass}@cluster0.mrtaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -24,9 +29,32 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-    // jobs related apis 
-     
+    // connecting with created mongodb Database
+    const jobscollection = client.db('Job_Portal').collection('Jobs')
+    // connecting with newly created colllection in mongodb 
+    const jobApplicationCollection = client.db('Job_Portal').collection('job-Applications')
 
+    // jobs related apis functionality
+    app.get('/jobs', async(req, res) =>{
+      const cursor = jobscollection.find()
+      const result = await cursor.toArray()
+      res.send(result)
+      console.log('getting mongo data in server');
+    })
+
+    app.get('/jobs/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await jobscollection.findOne(query)
+      res.send(result)
+    })
+
+    // job application apis 
+    app.post('/job-applications', async(req, res)=>{
+      const jobApplication = req.body;
+      const result = await jobApplicationCollection.insertOne(jobApplication)
+      res.send(result)
+    })
 
 
 
