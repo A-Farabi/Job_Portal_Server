@@ -4,9 +4,14 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 5000
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const cookie_parser = require('cookie-parser')
+const jwt = require('jsonwebtoken')
 
 // middleware
-app.use(cors())
+app.use(cors({
+  origin: ['http://localhost:5000/'],
+  credentials: true
+}))
 app.use(express.json())
 
 
@@ -34,12 +39,23 @@ async function run() {
     // connecting with newly created colllection in mongodb 
     const jobApplicationCollection = client.db('Job_Portal').collection('job-Applications')
 
+    // auth related apis
+    app.post('/jwt', (req, res) =>{
+      const user = req.body
+      const token = jwt.sign(user, process.env.JWT_ACCESS_TOKEN, {expiresIn: '5h'})
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: false
+      })
+      .send({success: true})
+    })
+    
+    
     // jobs related apis functionality
     app.get('/jobs', async(req, res) =>{
       const cursor = jobscollection.find()
       const result = await cursor.toArray()
       res.send(result)
-      console.log('getting mongo data in server');
     })
 
     app.get('/jobs/:id', async(req, res) =>{
