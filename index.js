@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken')
 
 // middleware
 app.use(cors({
-  origin: ['http://localhost:5000/'],
+  origin: ['http://localhost:5173'],
   credentials: true
 }))
 app.use(express.json())
@@ -50,6 +50,15 @@ async function run() {
       .send({success: true})
     })
     
+    // removing token after logout
+    app.post('/logout', (req, res) =>{
+      res
+      .clearCookie('token', {
+        httpOnly: true,
+        secure: false
+      })
+      .send({success:true})
+    })
     
     // jobs related apis functionality
     app.get('/jobs', async(req, res) =>{
